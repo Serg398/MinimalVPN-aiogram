@@ -28,7 +28,7 @@ instruction = types.InlineKeyboardButton("📄 Инструкция", callback_d
 
 
 async def listPeers(telegramID):
-    peersAll = getAllUserPeers(telegramID=telegramID)
+    peersAll = await getAllUserPeers(telegramID=telegramID)
     buttons = []
     for peer in peersAll:
         if peer['enabled'] == True:
@@ -52,9 +52,9 @@ async def send_welcome(message: types.Message):
 @dp.callback_query_handler()
 async def callback_query_handler(call: types.CallbackQuery):
     if call.data == "addDevice":
-        print("addDevice")
         await call.message.reply(text=f"Поиск ближайшего сервера")
-        await call.message.reply(text=createNewPeer(call.from_user.id))
+        text = await createNewPeer(call.from_user.id)
+        await call.message.reply(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -68,7 +68,6 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data == "myDevices":
-        print("myDevices")
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -82,8 +81,8 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data.startswith("del"):
-        print("del")
-        await call.message.reply(text=deletePeer(ids=call.data.split()[1]))
+        text = await deletePeer(ids=call.data.split()[1])
+        await call.message.reply(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -97,17 +96,15 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data.startswith("get"):
-        file, filename = getFilePeer(ids=call.data.split()[1])
+        file, filename = await getFilePeer(ids=call.data.split()[1])
         await bot.send_document(call.from_user.id, (f"{filename}.conf", file))
         await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data.startswith("generalMenu"):
-        print("generalMenu")
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
         inMurkup.add(addDevice, myDevices, payment, instruction)
         await call.message.answer(text=f"🏠 Главное меню:", reply_markup=inMurkup)
         await bot.answer_callback_query(callback_query_id=call.id)
-
 
     if call.data.startswith("instruction"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -117,8 +114,7 @@ async def callback_query_handler(call: types.CallbackQuery):
         await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data.startswith("payments"):
-        print(call.data.split())
-        if ping_server(call.data.split()[1]) == True:
+        if await ping_server(call.data.split()[1]) == True:
             await bot.send_invoice(call.message.chat.id,
                              title="Оплата услуг VPN-сервиса",
                              description=f"Устройство: {call.data.split()[2]}",

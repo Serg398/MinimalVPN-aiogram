@@ -1,4 +1,4 @@
-from pymongo import MongoClient
+import motor.motor_asyncio
 import datetime
 import uuid
 from wireguard import createPeerWG, deletePeerWG, getFilePeerWG, check_server, updatePeerWG
@@ -11,19 +11,21 @@ load_dotenv()
 SERVER_MONGO = os.environ.get("SERVER_MONGO")
 
 
-client = MongoClient("80.92.206.247", 27017, username='serg398', password='Kon031fit')
+client = motor.motor_asyncio.AsyncIOMotorClient("80.92.206.247", 27017, username='serg398', password='Kon031fit')
 users = client['users']
 peers = client['peers']["peers"]
 
 
-def createNewPeer(telegramID):
+async def createNewPeer(telegramID):
     newIDS = str(uuid.uuid4())
     date = datetime.datetime.now()
     date_timestamp = int(round(date.timestamp()))
     server = balanser()
     peerWG = createPeerWG(ids=newIDS, server=server)
     if peerWG == True:
-        peersAll = list(peers.find({"telegramID": str(telegramID)}))
+        peersAll = []
+        async for document in peers.find({"telegramID": str(telegramID)}):
+            peersAll.append(document)
         peers.insert_one(
             {
                 "ids": newIDS,
@@ -41,45 +43,54 @@ def createNewPeer(telegramID):
         return "Ошибка при добавлении устройства"
 
 
-def getFilePeer(ids):
-    peer = list(peers.find({"ids": ids}))
-    print(ids)
-    file = getFilePeerWG(server=peer[0]["server"], ids=ids)
+async def getFilePeer(ids):
+    peer = []
+    async for document in peers.find({"ids": ids}):
+        peer.append(document)
 
+    file = getFilePeerWG(server=peer[0]["server"], ids=ids)
     return file, peer[0]["name"]
 
 
-def getAllUserPeers(telegramID):
-    peersAll = list(peers.find({"telegramID": str(telegramID)}))
+async def getAllUserPeers(telegramID):
+    peersAll = []
+    async for document in peers.find({"telegramID": str(telegramID)}):
+        peersAll.append(document)
     return peersAll
 
 
-def deletePeer(ids):
+async def deletePeer(ids):
     try:
-        findPeer = list(peers.find({"ids": ids}))[0]
-        r = deletePeerWG(ids=findPeer["ids"], server=findPeer["server"])
+        findPeer = []
+        async for document in peers.find({"ids": ids}):
+            findPeer.append(document)
+        r = deletePeerWG(ids=findPeer[0]["ids"], server=findPeer[0]["server"])
         if r == True:
             peers.delete_one({"ids": ids})
             print(f"MONGO:: удален {ids}")
-            return f"Удалено устройство: {findPeer['name']}"
+            return f"Удалено устройство: {findPeer[0]['name']}"
         else:
-            return f"Ошибка удаления: {findPeer['name']}"
+            return f"Ошибка удаления: {findPeer[0]['name']}"
     except:
         print(f"MONGO:: не найден {ids}")
 
 
-def updatePeer(ids, status):
+async def updatePeer(ids, status):
     date = datetime.datetime.now() + datetime.timedelta(days=31)
     date_timestamp = int(round(date.timestamp()))
-    findPeer = list(peers.find({"ids": ids}))[0]
-    updatePeerWG(ids=ids, server=findPeer['server'], status=status)
+    findPeer = []
+    async for document in peers.find({"ids": ids}):
+        findPeer.append(document)
+    updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
     peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
     return list(peers.find({"ids": ids}))[0]
 
 
-def ping_server(ids):
-    findPeer = list(peers.find({"ids": ids}))[0]
-    return check_server(findPeer['server'])
+async def ping_server(ids):
+    findPeer = []
+    async for document in peers.find({"ids": ids}):
+        findPeer.append(document)
+    return check_server(findPeer[0]['server'])
 
 
 
