@@ -83,7 +83,10 @@ async def updatePeer(ids, status):
         findPeer.append(document)
     updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
     peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
-    return list(peers.find({"ids": ids}))[0]
+    return_list = []
+    async for document in peers.find({"ids": ids}):
+        return_list.append(document)
+    return return_list[0]
 
 
 async def ping_server(ids):
