@@ -147,7 +147,7 @@ async def checkout(pre_checkout_query: types.pre_checkout_query):
 @dp.message_handler(content_types=['successful_payment'])
 async def got_payment(message: types.Message):
     print(message.successful_payment.invoice_payload)
-    peer = updatePeer(ids=message.successful_payment.invoice_payload, status=True)
+    peer = await updatePeer(ids=message.successful_payment.invoice_payload, status=True)
     print('Оплата прошла успешно!\n')
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
     inMurkup.add(addDevice, myDevices, payment, instruction)

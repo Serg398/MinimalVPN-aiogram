@@ -21,7 +21,7 @@ async def createNewPeer(telegramID):
     date = datetime.datetime.now()
     date_timestamp = int(round(date.timestamp()))
     server = balanser()
-    peerWG = createPeerWG(ids=newIDS, server=server)
+    peerWG = await createPeerWG(ids=newIDS, server=server)
     if peerWG == True:
         peersAll = []
         async for document in peers.find({"telegramID": str(telegramID)}):
@@ -47,8 +47,7 @@ async def getFilePeer(ids):
     peer = []
     async for document in peers.find({"ids": ids}):
         peer.append(document)
-
-    file = getFilePeerWG(server=peer[0]["server"], ids=ids)
+    file = await getFilePeerWG(server=peer[0]["server"], ids=ids)
     return file, peer[0]["name"]
 
 
@@ -64,7 +63,7 @@ async def deletePeer(ids):
         findPeer = []
         async for document in peers.find({"ids": ids}):
             findPeer.append(document)
-        r = deletePeerWG(ids=findPeer[0]["ids"], server=findPeer[0]["server"])
+        r = await deletePeerWG(ids=findPeer[0]["ids"], server=findPeer[0]["server"])
         if r == True:
             peers.delete_one({"ids": ids})
             print(f"MONGO:: удален {ids}")
@@ -81,7 +80,7 @@ async def updatePeer(ids, status):
     findPeer = []
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
-    updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
+    await updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
     peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
     return_list = []
     async for document in peers.find({"ids": ids}):
