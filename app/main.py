@@ -7,7 +7,7 @@ from instruction import text_instruction
 
 load_dotenv()
 
-API_TOKEN = '5653584102:AAGb6Iuj_BzN_WPvbH-z31bBUqXjtta9F3Q'
+API_TOKEN = '5781590929:AAFCxs7YsCQsxiAs_7sdqWphSPLtLaEbB9U'
 PAYMENTS_TOKEN = os.environ.get("PAYMENTS_TOKEN")
 PRICE_RUB = int(os.environ.get("PRICE_RUB"))
 PRICE = types.LabeledPrice(label="Оплата", amount=100*PRICE_RUB)
@@ -96,6 +96,7 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(callback_query_id=call.id)
 
     if call.data.startswith("get"):
+        print('get')
         file, filename = await getFilePeer(ids=call.data.split()[1])
         await bot.send_document(call.from_user.id, (f"{filename}.conf", file))
         await bot.answer_callback_query(callback_query_id=call.id)

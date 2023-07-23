@@ -72,11 +72,12 @@ async def getFilePeerWG(ids, server):
         async with aiohttp.ClientSession(cookies=cookies) as session:
             peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
             peersAllWG = await peersAllWG.json()
-            for peerWG in peersAllWG:
-                if peerWG['name'] == ids:
-                    file = await session.get(f"http://{server}:{PORT_WG}/api/wireguard/client/{peerWG['id']}/configuration")
-                    await session.close()
-                    return file.content
+            for peer in peersAllWG:
+                if peer['name'] == ids:
+                    print(peer['id'])
+                    res = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}/configuration')
+                    file = await res.content.read()
+                    return file
 
 
 async def check_server(server):

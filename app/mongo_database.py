@@ -20,7 +20,7 @@ async def createNewPeer(telegramID):
     newIDS = str(uuid.uuid4())
     date = datetime.datetime.now()
     date_timestamp = int(round(date.timestamp()))
-    server = balanser()
+    server = await balanser()
     peerWG = await createPeerWG(ids=newIDS, server=server)
     if peerWG == True:
         peersAll = []
@@ -44,10 +44,13 @@ async def createNewPeer(telegramID):
 
 
 async def getFilePeer(ids):
+    print(ids)
     peer = []
     async for document in peers.find({"ids": ids}):
         peer.append(document)
+    print(peer[0]['server'])
     file = await getFilePeerWG(server=peer[0]["server"], ids=ids)
+    print(file, peer[0]["name"])
     return file, peer[0]["name"]
 
 

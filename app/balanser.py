@@ -1,5 +1,6 @@
 import json
-import requests
+
+import aiohttp
 from dotenv import load_dotenv
 import os
 
@@ -11,16 +12,18 @@ PORT_WG = os.environ.get("PORT_WG")
 PASSWD_WG = os.environ.get("PASSWD_WG")
 
 
-def balanser():
+async def balanser():
     balans = []
     for server in SERVERS_WG:
         try:
-            session = requests.Session()
-            session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG})
-            cookies = session.cookies.get_dict()
-            peersAllWG = session.get(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies)
-            balans.append({"host": server, "peers": len(peersAllWG.json())})
-            session.close()
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
+                    cookies = resp.cookies
+                async with aiohttp.ClientSession(cookies=cookies) as session:
+                    peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
+                    peersAllWG = await peersAllWG.json()
+                    balans.append({"host": server, "peers": len(peersAllWG)})
+                    await session.close()
         except:
             print(f"WG::{server}:: не могу подключиться")
     max_dict = min(balans, key=lambda x: x['peers'])
