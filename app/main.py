@@ -10,16 +10,14 @@ load_dotenv()
 API_TOKEN = '5653584102:AAGb6Iuj_BzN_WPvbH-z31bBUqXjtta9F3Q'
 PAYMENTS_TOKEN = os.environ.get("PAYMENTS_TOKEN")
 PRICE_RUB = int(os.environ.get("PRICE_RUB"))
-PRICE = types.LabeledPrice(label="Оплата", amount=100*PRICE_RUB)
-
+PRICE = types.LabeledPrice(label="Оплата", amount=100 * PRICE_RUB)
 
 logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
-
-#Buttons
+# Buttons
 generalMenu = types.InlineKeyboardButton("🏠 Главное меню", callback_data='generalMenu')
 addDevice = types.InlineKeyboardButton("➕ Добавить новое устройство", callback_data='addDevice')
 myDevices = types.InlineKeyboardButton("📱 Мои устройства", callback_data="myDevices")
@@ -38,7 +36,8 @@ async def listPeers(telegramID):
         buttons.append(types.InlineKeyboardButton(f" {indicator} {peer['name']}", callback_data="Удалить"))
         buttons.append(types.InlineKeyboardButton("Скачать", callback_data="get, " + peer['ids']))
         buttons.append(types.InlineKeyboardButton("Удалить", callback_data="del " + peer['ids']))
-        buttons.append(types.InlineKeyboardButton("Оплатить", callback_data="payments " + peer['ids'] + f" {peer['name']}"))
+        buttons.append(
+            types.InlineKeyboardButton("Оплатить", callback_data="payments " + peer['ids'] + f" {peer['name']}"))
     return buttons
 
 
@@ -54,7 +53,6 @@ async def callback_query_handler(call: types.CallbackQuery):
     if call.data == "addDevice":
         await call.message.reply(text=f"Поиск ближайшего сервера")
         text = await createNewPeer(call.from_user.id)
-        print()
         await call.message.reply(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
@@ -118,15 +116,15 @@ async def callback_query_handler(call: types.CallbackQuery):
     if call.data.startswith("payments"):
         if await ping_server(call.data.split()[1]) == True:
             await bot.send_invoice(call.message.chat.id,
-                             title="Оплата услуг VPN-сервиса",
-                             description=f"Устройство: {call.data.split()[2]}",
-                             provider_token=PAYMENTS_TOKEN,
-                             currency="rub",
-                             is_flexible=False,
-                             prices=[PRICE],
-                             start_parameter="test_bot",
-                             payload=f"{call.data.split()[1]}",
-                             )
+                                   title="Оплата услуг VPN-сервиса",
+                                   description=f"Устройство: {call.data.split()[2]}",
+                                   provider_token=PAYMENTS_TOKEN,
+                                   currency="rub",
+                                   is_flexible=False,
+                                   prices=[PRICE],
+                                   start_parameter="test_bot",
+                                   payload=f"{call.data.split()[1]}",
+                                   )
             await bot.answer_callback_query(callback_query_id=call.id)
         else:
             await call.message.reply(text="Сервер временно не доступен", parse_mode='HTML')
@@ -136,14 +134,14 @@ async def callback_query_handler(call: types.CallbackQuery):
 @dp.shipping_query_handler()
 async def shipping(shipping_query: types.shipping_query):
     await bot.answer_shipping_query(shipping_query.id, ok=True,
-                              error_message='Oh, seems like our Dog couriers are having a lunch right now. Try again later!')
+                                    error_message='Oh, seems like our Dog couriers are having a lunch right now. Try again later!')
 
 
 @dp.pre_checkout_query_handler()
 async def checkout(pre_checkout_query: types.pre_checkout_query):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True,
-                                  error_message="Aliens tried to steal your card's CVV, but we successfully protected your credentials,"
-                                                " try to pay again in a few minutes, we need a small rest.")
+                                        error_message="Aliens tried to steal your card's CVV, but we successfully protected your credentials,"
+                                                      " try to pay again in a few minutes, we need a small rest.")
 
 
 @dp.message_handler(content_types=['successful_payment'])
@@ -154,10 +152,10 @@ async def got_payment(message: types.Message):
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
     inMurkup.add(addDevice, myDevices, payment, instruction)
     await bot.send_message(message.chat.id,
-                     f'Оплата прошла успешно!\n'
-                     f'Сумма {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
-                     f"Устройство: {peer['name']}",
-                     parse_mode='Markdown', reply_markup=inMurkup)
+                           f'Оплата прошла успешно!\n'
+                           f'Сумма {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
+                           f"Устройство: {peer['name']}",
+                           parse_mode='Markdown', reply_markup=inMurkup)
 
 
 if __name__ == '__main__':

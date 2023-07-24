@@ -1,29 +1,26 @@
 import json
 
-import aiohttp
-from dotenv import load_dotenv
+import motor.motor_asyncio
 import os
-
+from dotenv import load_dotenv
 
 load_dotenv()
 
+SERVER_MONGO = os.environ.get("SERVER_MONGO")
 SERVERS_WG = json.loads(os.environ['SERVERS_WG'])
-PORT_WG = os.environ.get("PORT_WG")
-PASSWD_WG = os.environ.get("PASSWD_WG")
+
+client = motor.motor_asyncio.AsyncIOMotorClient(SERVER_MONGO, 27017, username='serg398', password='Kon031fit')
+users = client['users']
+peers = client['peers']["peers"]
 
 
 async def balanser():
+    print("Balanser start")
     balans = []
     for server in SERVERS_WG:
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
-                    cookies = resp.cookies
-                async with aiohttp.ClientSession(cookies=cookies) as session:
-                    peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
-                    peersAllWG = await peersAllWG.json()
-                    balans.append({"host": server, "peers": len(peersAllWG)})
-                    await session.close()
+            total = await peers.count_documents({"server": server})
+            balans.append({"host": server, "peers": total})
         except:
             print(f"WG::{server}:: не могу подключиться")
     max_dict = min(balans, key=lambda x: x['peers'])

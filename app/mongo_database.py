@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 SERVER_MONGO = os.environ.get("SERVER_MONGO")
+print(SERVER_MONGO)
 
-
-client = motor.motor_asyncio.AsyncIOMotorClient("80.92.206.247", 27017, username='serg398', password='Kon031fit')
+client = motor.motor_asyncio.AsyncIOMotorClient(SERVER_MONGO, 27017, username='serg398', password='Kon031fit')
 users = client['users']
 peers = client['peers']["peers"]
 
@@ -26,7 +26,7 @@ async def createNewPeer(telegramID):
         peersAll = []
         async for document in peers.find({"telegramID": str(telegramID)}):
             peersAll.append(document)
-        peers.insert_one(
+        await peers.insert_one(
             {
                 "ids": newIDS,
                 "telegramID": str(telegramID),
@@ -44,13 +44,10 @@ async def createNewPeer(telegramID):
 
 
 async def getFilePeer(ids):
-    print(ids)
     peer = []
     async for document in peers.find({"ids": ids}):
         peer.append(document)
-    print(peer[0]['server'])
     file = await getFilePeerWG(server=peer[0]["server"], ids=ids)
-    print(file, peer[0]["name"])
     return file, peer[0]["name"]
 
 
@@ -68,7 +65,7 @@ async def deletePeer(ids):
             findPeer.append(document)
         r = await deletePeerWG(ids=findPeer[0]["ids"], server=findPeer[0]["server"])
         if r == True:
-            peers.delete_one({"ids": ids})
+            await peers.delete_one({"ids": ids})
             print(f"MONGO:: удален {ids}")
             return f"Удалено устройство: {findPeer[0]['name']}"
         else:
@@ -84,7 +81,7 @@ async def updatePeer(ids, status):
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
     await updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
-    peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
+    await peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
     return_list = []
     async for document in peers.find({"ids": ids}):
         return_list.append(document)
@@ -96,6 +93,3 @@ async def ping_server(ids):
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
     return await check_server(findPeer[0]['server'])
-
-
-
