@@ -95,7 +95,7 @@ async def ping_server(ids):
     findPeer = []
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
-    return check_server(findPeer[0]['server'])
+    return await check_server(findPeer[0]['server'])
 
 
 

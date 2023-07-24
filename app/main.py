@@ -7,7 +7,7 @@ from instruction import text_instruction
 
 load_dotenv()
 
-API_TOKEN = '5781590929:AAFCxs7YsCQsxiAs_7sdqWphSPLtLaEbB9U'
+API_TOKEN = '5653584102:AAGb6Iuj_BzN_WPvbH-z31bBUqXjtta9F3Q'
 PAYMENTS_TOKEN = os.environ.get("PAYMENTS_TOKEN")
 PRICE_RUB = int(os.environ.get("PRICE_RUB"))
 PRICE = types.LabeledPrice(label="Оплата", amount=100*PRICE_RUB)
@@ -45,7 +45,7 @@ async def listPeers(telegramID):
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
-    inMurkup.add(addDevice, myDevices, payment, instruction)
+    inMurkup.add(addDevice, myDevices, instruction)
     await message.answer(f"Привет, {message.from_user.first_name}.", reply_markup=inMurkup)
 
 
@@ -54,6 +54,7 @@ async def callback_query_handler(call: types.CallbackQuery):
     if call.data == "addDevice":
         await call.message.reply(text=f"Поиск ближайшего сервера")
         text = await createNewPeer(call.from_user.id)
+        print()
         await call.message.reply(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
@@ -103,7 +104,7 @@ async def callback_query_handler(call: types.CallbackQuery):
 
     if call.data.startswith("generalMenu"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
-        inMurkup.add(addDevice, myDevices, payment, instruction)
+        inMurkup.add(addDevice, myDevices, instruction)
         await call.message.answer(text=f"🏠 Главное меню:", reply_markup=inMurkup)
         await bot.answer_callback_query(callback_query_id=call.id)
 
