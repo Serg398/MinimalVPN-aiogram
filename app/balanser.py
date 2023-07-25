@@ -14,15 +14,3 @@ users = client['users']
 peers = client['peers']["peers"]
 
 
-async def balanser():
-    print("Balanser start")
-    balans = []
-    for server in SERVERS_WG:
-        try:
-            total = await peers.count_documents({"server": server})
-            balans.append({"host": server, "peers": total})
-        except:
-            print(f"WG::{server}:: не могу подключиться")
-    max_dict = min(balans, key=lambda x: x['peers'])
-    print(f"BALANCER::{max_dict['host']}:: в приоритете")
-    return max_dict["host"]

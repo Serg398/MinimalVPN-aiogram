@@ -3,6 +3,7 @@ import aiohttp
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
 
 PORT_WG = os.environ.get("PORT_WG")
@@ -14,9 +15,7 @@ async def createPeerWG(ids, server):
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
                 cookies = resp.cookies
-            async with aiohttp.ClientSession(cookies=cookies) as session:
-                await session.post(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies,
-                                   json={"name": f"{ids}"})
+                await session.post(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies, json={"name": f"{ids}"})
                 print(f"WG::{server}:: добавлен {ids}")
                 await session.close()
                 return True
@@ -30,12 +29,11 @@ async def deletePeerWG(ids, server):
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
                 cookies = resp.cookies
-            async with aiohttp.ClientSession(cookies=cookies) as session:
-                peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
+                peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies)
                 peersAllWG = await peersAllWG.json()
                 for peer in peersAllWG:
                     if peer['name'] == ids:
-                        await session.delete(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}')
+                        await session.delete(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}', cookies=cookies)
                 print(f"WG::{server}:: удален {ids}")
                 await session.close()
                 return True
@@ -49,8 +47,7 @@ async def updatePeerWG(ids, status, server):
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
                 cookies = resp.cookies
-            async with aiohttp.ClientSession(cookies=cookies) as session:
-                peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
+                peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies)
                 peersAllWG = await peersAllWG.json()
                 for peer in peersAllWG:
                     if peer['name'] == ids:
@@ -69,14 +66,13 @@ async def getFilePeerWG(ids, server):
     async with aiohttp.ClientSession() as session:
         async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
             cookies = resp.cookies
-        async with aiohttp.ClientSession(cookies=cookies) as session:
-            peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client')
+            peersAllWG = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies)
             peersAllWG = await peersAllWG.json()
             for peer in peersAllWG:
                 if peer['name'] == ids:
-                    res = await session.get(
-                        f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}/configuration')
+                    res = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}/configuration', cookies=cookies)
                     file = await res.content.read()
+                    await session.close()
                     return file
 
 
@@ -85,9 +81,9 @@ async def check_server(server):
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
                 cookies = resp.cookies
-            async with aiohttp.ClientSession(cookies=cookies) as session:
-                await session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG})
+                await session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}, cookies=cookies)
                 await session.close()
                 return True
     except:
         return False
+

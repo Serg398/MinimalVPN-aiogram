@@ -59,12 +59,12 @@ async def callback_query_handler(call: types.CallbackQuery):
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
             inMurkup.add(addDevice, generalMenu)
             await call.message.answer(text=f"Список пуст", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
             inMurkup.add(*buttons, generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
 
     if call.data == "myDevices":
         buttons = await listPeers(telegramID=call.from_user.id)
@@ -72,12 +72,12 @@ async def callback_query_handler(call: types.CallbackQuery):
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
             inMurkup.add(addDevice, generalMenu)
             await call.message.answer(text=f"Список пуст", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
             inMurkup.add(*buttons, generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
 
     if call.data.startswith("del"):
         text = await deletePeer(ids=call.data.split()[1])
@@ -87,31 +87,31 @@ async def callback_query_handler(call: types.CallbackQuery):
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
             inMurkup.add(addDevice, generalMenu)
             await call.message.answer(text=f"Список пуст", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
             inMurkup.add(*buttons, generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
-            await bot.answer_callback_query(callback_query_id=call.id)
+            await bot.answer_callback_query(call.id)
 
     if call.data.startswith("get"):
         print('get')
         file, filename = await getFilePeer(ids=call.data.split()[1])
         await bot.send_document(call.from_user.id, (f"{filename}.conf", file))
-        await bot.answer_callback_query(callback_query_id=call.id)
+        await bot.answer_callback_query(call.id)
 
     if call.data.startswith("generalMenu"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
         inMurkup.add(addDevice, myDevices, instruction)
         await call.message.answer(text=f"🏠 Главное меню:", reply_markup=inMurkup)
-        await bot.answer_callback_query(callback_query_id=call.id)
+        await bot.answer_callback_query(call.id)
 
     if call.data.startswith("instruction"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
         inMurkup.add(generalMenu)
         text = text_instruction()
         await call.message.answer(text=text, reply_markup=inMurkup, parse_mode='HTML')
-        await bot.answer_callback_query(callback_query_id=call.id)
+        await bot.answer_callback_query(call.id)
 
     if call.data.startswith("payments"):
         if await ping_server(call.data.split()[1]) == True:
@@ -159,4 +159,4 @@ async def got_payment(message: types.Message):
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp)
