@@ -1,5 +1,7 @@
 import logging
 import os
+import time
+
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, executor, types
 from mongo_database import createNewPeer, getAllUserPeers, deletePeer, getFilePeer, updatePeer, ping_server
@@ -7,14 +9,14 @@ from instruction import text_instruction
 
 load_dotenv()
 
-API_TOKEN = '5653584102:AAGb6Iuj_BzN_WPvbH-z31bBUqXjtta9F3Q'
+API_TOKEN_BOT = os.environ.get("API_TOKEN_BOT")
 PAYMENTS_TOKEN = os.environ.get("PAYMENTS_TOKEN")
 PRICE_RUB = int(os.environ.get("PRICE_RUB"))
 PRICE = types.LabeledPrice(label="Оплата", amount=100 * PRICE_RUB)
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=API_TOKEN_BOT)
 dp = Dispatcher(bot)
 
 # Buttons
@@ -51,9 +53,9 @@ async def send_welcome(message: types.Message):
 @dp.callback_query_handler()
 async def callback_query_handler(call: types.CallbackQuery):
     if call.data == "addDevice":
-        await call.message.reply(text=f"Поиск ближайшего сервера")
+        await call.message.answer(text=f"Поиск ближайшего сервера")
         text = await createNewPeer(call.from_user.id)
-        await call.message.reply(text=text)
+        await call.message.answer(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -62,7 +64,8 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
-            inMurkup.add(*buttons, generalMenu)
+            inMurkup.add(*buttons, addDevice)
+            inMurkup.add(generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
             await bot.answer_callback_query(call.id)
 
@@ -75,13 +78,14 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
-            inMurkup.add(*buttons, generalMenu)
+            inMurkup.add(*buttons, addDevice)
+            inMurkup.add(generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
             await bot.answer_callback_query(call.id)
 
     if call.data.startswith("del"):
         text = await deletePeer(ids=call.data.split()[1])
-        await call.message.reply(text=text)
+        await call.message.answer(text=text)
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
@@ -90,7 +94,7 @@ async def callback_query_handler(call: types.CallbackQuery):
             await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
-            inMurkup.add(*buttons, generalMenu)
+            inMurkup.add(*buttons, addDevice, generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
             await bot.answer_callback_query(call.id)
 
@@ -152,9 +156,10 @@ async def got_payment(message: types.Message):
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
     inMurkup.add(addDevice, myDevices, payment, instruction)
     await bot.send_message(message.chat.id,
-                           f'Оплата прошла успешно!\n'
-                           f'Сумма {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
-                           f"Устройство: {peer['name']}",
+                           f'*Оплата прошла успешно!*\n\n'
+                           f'*Сумма:* {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
+                           f"*Устройство:* {peer['name']}\n"
+                           f"*Активен до:* {time.strftime('%Y-%m-%d', time.localtime(peer['disableDate']))}",
                            parse_mode='Markdown', reply_markup=inMurkup)
 
 

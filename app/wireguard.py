@@ -51,7 +51,7 @@ async def updatePeerWG(ids, status, server):
                 peersAllWG = await peersAllWG.json()
                 for peer in peersAllWG:
                     if peer['name'] == ids:
-                        await session.post(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}/{status}')
+                        await session.post(f'http://{server}:{PORT_WG}/api/wireguard/client/{peer["id"]}/{status}', cookies=cookies)
                 if status == 'disable':
                     print(f"WG::{server}:: отключен {ids}")
                 else:

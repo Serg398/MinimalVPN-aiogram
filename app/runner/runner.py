@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import json
 import os
 from dotenv import load_dotenv
@@ -40,8 +41,8 @@ async def editWG(server, ids, status):
 
 
 async def compare(server, dataDB):
-    arrayDB = []
-    arrayWG = []
+    # arrayDB = []
+    # arrayWG = []
     async with aiohttp.ClientSession() as session:
         try:
             async with session.post(f'http://{server}:{PORT_WG}/api/session', json={"password": PASSWD_WG}) as resp:
@@ -49,18 +50,18 @@ async def compare(server, dataDB):
             resp = await session.get(f'http://{server}:{PORT_WG}/api/wireguard/client', cookies=cookies)
             dataWG = await resp.json()
 
-            for peerDB in dataDB:
-                arrayDB.append(peerDB['ids'])
-            for peerWG in dataWG:
-                arrayWG.append(peerWG["name"])
-
-            for peerWG in dataWG:
-                if peerWG['name'] not in arrayDB:
-                    await editWG(server=server, status='delete', ids=peerWG['id'])
-
-            for peerDB in dataDB:
-                if peerDB['ids'] not in arrayWG:
-                    await editWG(server=server, status='create', ids=peerDB['ids'])
+            # for peerDB in dataDB:
+            #     arrayDB.append(peerDB['ids'])
+            # for peerWG in dataWG:
+            #     arrayWG.append(peerWG["name"])
+            #
+            # for peerWG in dataWG:
+            #     if peerWG['name'] not in arrayDB:
+            #         await editWG(server=server, status='delete', ids=peerWG['id'])
+            #
+            # for peerDB in dataDB:
+            #     if peerDB['ids'] not in arrayWG:
+            #         await editWG(server=server, status='create', ids=peerDB['ids'])
 
             for peerDB in dataDB:
                 for peerWG in dataWG:
@@ -76,6 +77,14 @@ async def compare(server, dataDB):
 async def start():
     while True:
         start = timeit.default_timer()
+        date = datetime.datetime.now()
+
+        async for device_obj in peers.find():
+            print(int(device_obj['disableDate']), int(round(date.timestamp())))
+            if device_obj['enabled'] == True and int(device_obj['disableDate']) <= int(round(date.timestamp())):
+                print(device_obj['ids'] + ": disable")
+                await peers.update_one({"ids": device_obj['ids']}, {"$set": {'enabled': False}})
+
         tasks = []
         for server in SERVERS_WG:
             dataBD = []
@@ -83,10 +92,11 @@ async def start():
                 dataBD.append(device_obj)
             task = asyncio.create_task(compare(server=server, dataDB=dataBD))
             tasks.append(task)
+
         await asyncio.gather(*tasks)
         end = timeit.default_timer()
         print(f"Time taken is {end - start}\n")
-        await asyncio.sleep(10)
+        await asyncio.sleep(30)
 
 
 asyncio.run(start())

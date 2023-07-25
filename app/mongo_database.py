@@ -33,7 +33,7 @@ async def balanser():
 
 async def createNewPeer(telegramID):
     newIDS = str(uuid.uuid4())
-    date = datetime.datetime.now()
+    date = datetime.datetime.now() + datetime.timedelta(days=31)
     date_timestamp = int(round(date.timestamp()))
     server = await balanser()
     peerWG = await createPeerWG(ids=newIDS, server=server)
@@ -90,13 +90,21 @@ async def deletePeer(ids):
 
 
 async def updatePeer(ids, status):
-    date = datetime.datetime.now() + datetime.timedelta(days=31)
-    date_timestamp = int(round(date.timestamp()))
+    date = datetime.datetime.now()
+    date_new = date + datetime.timedelta(days=31)
+    date_timestamp = int(round(date_new.timestamp()))
     findPeer = []
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
-    await updatePeerWG(ids=ids, server=findPeer[0]['server'], status=status)
-    await peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
+
+    peer = findPeer[0]
+    if int(peer['disableDate']) >= int(round(date.timestamp())):
+        await updatePeerWG(ids=ids, server=peer['server'], status=status)
+        await peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": int(peer['disableDate']) + 2678400}})
+    if int(peer['disableDate']) <= int(round(date.timestamp())):
+        await updatePeerWG(ids=ids, server=peer['server'], status=status)
+        await peers.update_one({"ids": ids}, {"$set": {'enabled': True, "disableDate": date_timestamp}})
+
     return_list = []
     async for document in peers.find({"ids": ids}):
         return_list.append(document)
@@ -107,7 +115,8 @@ async def ping_server(ids):
     findPeer = []
     async for document in peers.find({"ids": ids}):
         findPeer.append(document)
-    return await check_server(findPeer[0]['server'])
+    peer = findPeer[0]
+    return await check_server(peer['server'])
 
 
 
