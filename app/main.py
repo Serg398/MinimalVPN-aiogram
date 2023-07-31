@@ -89,12 +89,15 @@ async def callback_query_handler(call: types.CallbackQuery):
         buttons = await listPeers(telegramID=call.from_user.id)
         if buttons == []:
             inMurkup = types.InlineKeyboardMarkup(row_width=1)
-            inMurkup.add(addDevice, generalMenu)
+            inMurkup.add(addDevice)
+            inMurkup.add(generalMenu)
             await call.message.answer(text=f"Список пуст", reply_markup=inMurkup)
             await bot.answer_callback_query(call.id)
         else:
             inMurkup = types.InlineKeyboardMarkup(row_width=4)
-            inMurkup.add(*buttons, addDevice, generalMenu)
+            inMurkup.add(*buttons)
+            inMurkup.add(addDevice)
+            inMurkup.add(generalMenu)
             await call.message.answer(text=f"📱 Список устройств:", reply_markup=inMurkup)
             await bot.answer_callback_query(call.id)
 
@@ -126,7 +129,7 @@ async def callback_query_handler(call: types.CallbackQuery):
                                    currency="rub",
                                    is_flexible=False,
                                    prices=[PRICE],
-                                   start_parameter="test_bot",
+                                   start_parameter="test",
                                    payload=f"{call.data.split()[1]}",
                                    )
             await bot.answer_callback_query(callback_query_id=call.id)
@@ -150,11 +153,20 @@ async def checkout(pre_checkout_query: types.pre_checkout_query):
 
 @dp.message_handler(content_types=['successful_payment'])
 async def got_payment(message: types.Message):
-    print(message.successful_payment.invoice_payload)
-    peer = await updatePeer(ids=message.successful_payment.invoice_payload, status=True)
-    print('Оплата прошла успешно!\n')
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
     inMurkup.add(addDevice, myDevices, payment, instruction)
+    peer = await updatePeer(ids=message.successful_payment.invoice_payload, status=True)
+    await bot.send_message(-917478475,
+                           f'*ID:* {message.chat.id}\n'
+                           f'*USER:* {message.from_user.first_name}, {message.from_user.last_name}, @{message.from_user.username}\n\n'
+                           f'*Оплата прошла успешно!*\n\n'
+                           f'*Сумма:* {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
+                           f"*Устройство:* {peer['name']}\n"
+                           f"*ID peer:* {peer['ids']}\n"
+                           f"*ID провайдера:* {message.successful_payment.provider_payment_charge_id}\n"
+                           f"*Активен до:* {time.strftime('%Y-%m-%d', time.localtime(peer['disableDate']))}",
+                           parse_mode='Markdown')
+
     await bot.send_message(message.chat.id,
                            f'*Оплата прошла успешно!*\n\n'
                            f'*Сумма:* {message.successful_payment.total_amount / 100} {message.successful_payment.currency}\n'
