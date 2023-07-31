@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import motor.motor_asyncio
@@ -32,6 +33,7 @@ async def balanser():
     return max_dict["host"]
 
 async def createNewPeer(telegramID):
+    await asyncio.sleep(1)
     newIDS = str(uuid.uuid4())
     date = datetime.datetime.now() + datetime.timedelta(days=31)
     date_timestamp = int(round(date.timestamp()))
@@ -59,6 +61,7 @@ async def createNewPeer(telegramID):
 
 
 async def getFilePeer(ids):
+    await asyncio.sleep(1)
     peer = []
     async for document in peers.find({"ids": ids}):
         peer.append(document)
@@ -74,6 +77,7 @@ async def getAllUserPeers(telegramID):
 
 
 async def deletePeer(ids):
+    await asyncio.sleep(1)
     try:
         findPeer = []
         async for document in peers.find({"ids": ids}):
@@ -90,6 +94,7 @@ async def deletePeer(ids):
 
 
 async def updatePeer(ids, status):
+    await asyncio.sleep(1)
     date = datetime.datetime.now()
     date_new = date + datetime.timedelta(days=31)
     date_timestamp = int(round(date_new.timestamp()))
