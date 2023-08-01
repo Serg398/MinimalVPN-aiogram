@@ -7,6 +7,8 @@ from aiogram import Bot, Dispatcher, executor, types
 from mongo_database import createNewPeer, getAllUserPeers, deletePeer, getFilePeer, updatePeer, ping_server
 from instruction import text_instruction
 
+print("Initialize services..")
+
 load_dotenv()
 
 API_TOKEN_BOT = os.environ.get("API_TOKEN_BOT")
@@ -22,10 +24,11 @@ dp = Dispatcher(bot)
 # Buttons
 generalMenu = types.InlineKeyboardButton("🏠 Главное меню", callback_data='generalMenu')
 addDevice = types.InlineKeyboardButton("➕ Добавить новое устройство", callback_data='addDevice')
-myDevices = types.InlineKeyboardButton("📱 Мои устройства", callback_data="myDevices")
+myDevices = types.InlineKeyboardButton("📱 Управление устройствами", callback_data="myDevices")
 payment = types.InlineKeyboardButton("💳 Пополнить счет", callback_data="payment")
 instruction = types.InlineKeyboardButton("📄 Инструкция", callback_data="instruction")
 
+print("Start bot..")
 
 async def listPeers(telegramID):
     peersAll = await getAllUserPeers(telegramID=telegramID)
@@ -46,7 +49,7 @@ async def listPeers(telegramID):
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     inMurkup = types.InlineKeyboardMarkup(row_width=1)
-    inMurkup.add(addDevice, myDevices, instruction)
+    inMurkup.add(myDevices, instruction)
     await message.answer(f"Привет, {message.from_user.first_name}.", reply_markup=inMurkup)
 
 
@@ -109,14 +112,14 @@ async def callback_query_handler(call: types.CallbackQuery):
 
     if call.data.startswith("generalMenu"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
-        inMurkup.add(addDevice, myDevices, instruction)
+        inMurkup.add(myDevices, instruction)
         await call.message.answer(text=f"🏠 Главное меню:", reply_markup=inMurkup)
         await bot.answer_callback_query(call.id)
 
     if call.data.startswith("instruction"):
         inMurkup = types.InlineKeyboardMarkup(row_width=1)
-        inMurkup.add(generalMenu)
-        text = text_instruction()
+        inMurkup.add(myDevices, generalMenu)
+        text = await text_instruction()
         await call.message.answer(text=text, reply_markup=inMurkup, parse_mode='HTML')
         await bot.answer_callback_query(call.id)
 
