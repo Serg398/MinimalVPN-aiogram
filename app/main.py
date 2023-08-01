@@ -126,9 +126,26 @@ async def callback_query_handler(call: types.CallbackQuery):
                                    title="Оплата услуг VPN-сервиса",
                                    description=f"Устройство: {call.data.split()[2]}",
                                    provider_token=PAYMENTS_TOKEN,
+                                   need_email=True,
+                                   send_email_to_provider=True,
                                    currency="rub",
                                    is_flexible=False,
                                    prices=[PRICE],
+                                   provider_data={
+                                       "receipt": {
+                                           "items": [
+                                               {
+                                                   "description": f"{call.data.split()[2]}",
+                                                   "quantity": "1.00",
+                                                   "amount": {
+                                                       "value": "120.00",
+                                                       "currency": "RUB"
+                                                   },
+                                                   "vat_code": 1
+                                               }
+                                           ]
+                                       }
+                                   },
                                    start_parameter="test",
                                    payload=f"{call.data.split()[1]}",
                                    )
