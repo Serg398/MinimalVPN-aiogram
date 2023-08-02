@@ -1,11 +1,11 @@
 import logging
 import os
 import time
-
 from dotenv import load_dotenv
 from aiogram import Bot, Dispatcher, executor, types
 from mongo_database import createNewPeer, getAllUserPeers, deletePeer, getFilePeer, updatePeer, ping_server
 from instruction import text_instruction
+
 
 print("Initialize services..")
 
@@ -29,6 +29,7 @@ payment = types.InlineKeyboardButton("💳 Пополнить счет", callbac
 instruction = types.InlineKeyboardButton("📄 Инструкция", callback_data="instruction")
 
 print("Start bot..")
+
 
 async def listPeers(telegramID):
     peersAll = await getAllUserPeers(telegramID=telegramID)

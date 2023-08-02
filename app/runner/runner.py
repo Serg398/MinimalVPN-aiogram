@@ -84,6 +84,9 @@ async def start():
             if device_obj['enabled'] == True and int(device_obj['disableDate']) <= int(round(date.timestamp())):
                 print(device_obj['ids'] + ": disable")
                 await peers.update_one({"ids": device_obj['ids']}, {"$set": {'enabled': False}})
+            if device_obj['enabled'] == False and  int(device_obj['disableDate']) > int(round(date.timestamp())):
+                print(device_obj['ids'] + ": enabled")
+                await peers.update_one({"ids": device_obj['ids']}, {"$set": {'enabled': True}})
 
         tasks = []
         for server in SERVERS_WG:

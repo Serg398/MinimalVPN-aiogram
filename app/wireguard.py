@@ -1,4 +1,3 @@
-import asyncio
 import aiohttp
 from dotenv import load_dotenv
 import os

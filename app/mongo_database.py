@@ -1,12 +1,12 @@
 import asyncio
 import json
-
 import motor.motor_asyncio
 import datetime
 import uuid
 from wireguard import createPeerWG, deletePeerWG, getFilePeerWG, check_server, updatePeerWG
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
@@ -32,10 +32,11 @@ async def balanser():
     print(f"BALANCER::{max_dict['host']}:: в приоритете")
     return max_dict["host"]
 
+
 async def createNewPeer(telegramID):
     await asyncio.sleep(1)
     newIDS = str(uuid.uuid4())
-    date = datetime.datetime.now() + datetime.timedelta(days=31)
+    date = datetime.datetime.now()
     date_timestamp = int(round(date.timestamp()))
     server = await balanser()
     peerWG = await createPeerWG(ids=newIDS, server=server)
@@ -48,7 +49,7 @@ async def createNewPeer(telegramID):
                 "ids": newIDS,
                 "telegramID": str(telegramID),
                 "name": f"{str(len(peersAll) + 1)}-{newIDS[:4]}",
-                "enabled": True,
+                "enabled": False,
                 "server": server,
                 "disableDate": date_timestamp
             }
