@@ -9,6 +9,7 @@ from instruction import text_instruction
 
 print("Initialize services..")
 
+
 load_dotenv()
 
 API_TOKEN_BOT = os.environ.get("API_TOKEN_BOT")
